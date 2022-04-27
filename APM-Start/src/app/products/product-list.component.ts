@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { IProduct } from './product';
 import { ProductService } from './product.service';
 
@@ -18,13 +19,20 @@ export class ProductListComponent implements OnInit {
   showImage: boolean = false;
   filteredProducts: IProduct[] = [];
   products: IProduct[] = [];
-  
+  errorMessage: string = '';
+  sub!: Subscription;
+
   ngOnInit(): void {
     this.listFilter = '';
-    this.products = this.productService.getProducts();
-    this.filteredProducts = this.products;
+    this.sub = this.productService.getProducts().subscribe({
+      next: (x) => {
+        this.products = x;
+        this.filteredProducts = this.products;
+      },
+      error: (y) => (this.errorMessage = y),
+    });
   }
-  
+
   get listFilter(): string {
     return this._listFilter;
   }
@@ -48,5 +56,9 @@ export class ProductListComponent implements OnInit {
 
   changeRating(rating: number): void {
     this.pageTitle = this.pageTitle + ` The rating ${rating} was selected!`;
+  }
+
+  ngOnDestroy() {
+    this.sub.unsubscribe;
   }
 }
